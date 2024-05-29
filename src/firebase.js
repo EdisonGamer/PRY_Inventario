@@ -1,6 +1,7 @@
-// src/firebase.js
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, doc, updateDoc, increment, getDocs } from 'firebase/firestore';
+import { 
+  getFirestore, collection, addDoc, doc, updateDoc, increment, getDocs, query, where 
+} from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -16,4 +17,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-export { db, auth, collection, addDoc, doc, updateDoc, increment, getDocs, signInWithEmailAndPassword, createUserWithEmailAndPassword };
+export { 
+  db, auth, collection, addDoc, doc, updateDoc, increment, getDocs, query, where, 
+  signInWithEmailAndPassword, createUserWithEmailAndPassword 
+};
