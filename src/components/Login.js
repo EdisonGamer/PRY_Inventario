@@ -61,10 +61,7 @@ const Login = () => {
           <Button type="submit" variant="contained" color="primary" fullWidth>
             INICIAR SESIÓN
           </Button>
-          <Button onClick={handleSignUp} variant="outlined" color="secondary" fullWidth>
-            REGISTRARSE
-          </Button>
-        </form>
+          </form>
       </Box>
     </Container>
   );
