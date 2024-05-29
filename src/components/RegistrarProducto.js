@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { db, collection, addDoc, getDocs, query, where, doc, updateDoc } from '../firebase';
-import { useNavigate } from 'react-router-dom';  // Importar useNavigate
 import './RegistrarProducto.css';
 
 const RegistrarProducto = () => {
@@ -11,10 +10,10 @@ const RegistrarProducto = () => {
   const [marca, setMarca] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [stock, setStock] = useState('');
+  const [ubicacion, setUbicacion] = useState('');
   const [error, setError] = useState('');
   const [editando, setEditando] = useState(false);
   const [idProducto, setIdProducto] = useState('');
-  const navigate = useNavigate();  // Inicializar useNavigate
 
   const obtenerProductos = async () => {
     const productosSnapshot = await getDocs(collection(db, 'productos'));
@@ -42,6 +41,7 @@ const RegistrarProducto = () => {
         marca,
         descripcion,
         stock: parseInt(stock, 10),
+        ubicacion,
         proveedores: [codigoProveedor]
       });
 
@@ -61,6 +61,7 @@ const RegistrarProducto = () => {
         marca,
         descripcion,
         stock: parseInt(stock, 10),
+        ubicacion
       });
 
       alert('Producto actualizado exitosamente');
@@ -78,6 +79,7 @@ const RegistrarProducto = () => {
     setMarca(producto.marca);
     setDescripcion(producto.descripcion);
     setStock(producto.stock);
+    setUbicacion(producto.ubicacion);
     setEditando(true);
     setIdProducto(producto.id);
   };
@@ -89,6 +91,7 @@ const RegistrarProducto = () => {
     setMarca('');
     setDescripcion('');
     setStock('');
+    setUbicacion('');
     setError('');
     setEditando(false);
     setIdProducto('');
@@ -155,6 +158,15 @@ const RegistrarProducto = () => {
               required
             />
           </div>
+          <div className="form-group">
+            <label>Ubicación</label>
+            <input
+              type="text"
+              value={ubicacion}
+              onChange={(e) => setUbicacion(e.target.value)}
+              required
+            />
+          </div>
           {error && <p className="error">{error}</p>}
           <div className="form-buttons">
             <button type="submit" className="btn-agregar-producto">
@@ -167,7 +179,7 @@ const RegistrarProducto = () => {
             )}
           </div>
         </form>
-        <button className="btn-regresar" onClick={() => navigate('/home')}>Regresar</button>
+        <button className="btn-regresar" onClick={() => window.location.href = '/home'}>Regresar</button>
       </div>
 
       <div className="tabla-container">
@@ -181,6 +193,7 @@ const RegistrarProducto = () => {
               <th>Marca</th>
               <th>Descripción</th>
               <th>Stock</th>
+              <th>Ubicación</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -193,6 +206,7 @@ const RegistrarProducto = () => {
                 <td>{producto.marca}</td>
                 <td>{producto.descripcion}</td>
                 <td>{producto.stock}</td>
+                <td>{producto.ubicacion}</td>
                 <td>
                   <button onClick={() => seleccionarProducto(producto)}>Editar</button>
                 </td>

@@ -14,7 +14,7 @@ const Home = () => {
         </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
-            <Button variant="contained" color="primary" fullWidth onClick={() => navigate('/inventory')}>
+            <Button variant="contained" color="primary" fullWidth onClick={() => navigate('/Inventario')}>
               Inventario
             </Button>
           </Grid>

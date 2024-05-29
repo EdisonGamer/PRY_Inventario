@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './components/Login';
-import Inventory from './components/Inventory';
+import Inventario from './components/Inventario';
 import RegistrarProducto from './components/RegistrarProducto';
 import RegistrarCompra from './components/RegistrarCompra';
 import RegistrarVenta from './components/RegistrarVenta';
@@ -16,7 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/inventory" element={<Inventory />} />
+        <Route path="/Inventario" element={<Inventario />} />
         <Route path="/registrar-producto" element={<RegistrarProducto />} />
         <Route path="/registrar-compra" element={<RegistrarCompra />} />
         <Route path="/registrar-venta" element={<RegistrarVenta />} />
