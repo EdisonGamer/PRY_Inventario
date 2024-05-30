@@ -1,94 +1,69 @@
-.registrar-producto-container {
+.main-container {
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  align-items: flex-start;
 }
 
-.form-container, .tabla-container {
+.form-container {
   flex: 1;
-  min-width: 300px;
-  max-width: 45%;
-  margin: 10px;
+  margin-right: 20px; /* Aumentar el margen derecho */
 }
 
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
+.tabla-container {
+  flex: 2;
+  max-width: 60%; /* Asegurarse de que la tabla no ocupe todo el espacio */
 }
 
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.form-group input {
-  width: calc(100% - 12px);
-  padding: 8px;
-  margin-left: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.form-buttons {
-  display: flex;
-  justify-content: space-between;
-}
-
-.btn-agregar-producto, .btn-cancelar {
-  display: inline-block;
-  width: 48%;
-  padding: 10px;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-agregar-producto {
-  background-color: #28a745;
-}
-
-.btn-cancelar {
-  background-color: #dc3545;
-}
-
-.btn-agregar-producto:hover {
-  background-color: #218838;
-}
-
-.btn-cancelar:hover {
-  background-color: #c82333;
-}
-
-.error {
-  color: red;
-  text-align: center;
+.tabla-wrapper {
+  overflow: hidden;
 }
 
 .tabla-productos {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
 }
 
 .tabla-productos th, .tabla-productos td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 12px; /* Aumentar el padding */
 }
 
 .tabla-productos th {
-  background-color: #f2f2f2;
-  text-align: center;
+  background-color: #f5f5f5; /* Cambiar el fondo del encabezado */
+  color: #333; /* Cambiar el color del texto del encabezado */
 }
 
-.tabla-productos td {
-  text-align: center;
+.tabla-datos {
+  display: block;
+  max-height: 300px; /* Ajusta esto según necesites */
+  overflow-y: auto; /* Solo una barra de desplazamiento aquí */
+}
+
+.tabla-datos table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-datos td, .tabla-datos th {
+  border: 1px solid #ddd;
+  padding: 12px; /* Aumentar el padding */
+}
+
+.tabla-datos thead {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.tabla-datos tbody {
+  display: block;
+  width: 100%;
+  overflow-y: auto;
+  max-height: 300px; /* Ajusta esto según necesites */
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px; /* Aumentar el margen superior */
 }

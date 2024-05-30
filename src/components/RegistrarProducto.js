@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, addDoc, getDocs, query, where, doc, updateDoc } from '../firebase';
-import './RegistrarProducto.css';
+import { db, collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from '../firebase';
+import { 
+  Container, TextField, Button, Typography, Select, MenuItem, FormControl, InputLabel, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle 
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import HomeIcon from '@mui/icons-material/Home'; // Importa el icono Home
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate para la navegación
 
 const RegistrarProducto = () => {
   const [productos, setProductos] = useState([]);
@@ -14,10 +20,17 @@ const RegistrarProducto = () => {
   const [error, setError] = useState('');
   const [editando, setEditando] = useState(false);
   const [idProducto, setIdProducto] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchBy, setSearchBy] = useState('codigoInterno');
+  const [open, setOpen] = useState(false);
+  const [productoAEliminar, setProductoAEliminar] = useState(null);
+
+  const navigate = useNavigate(); // Hook para la navegación
 
   const obtenerProductos = async () => {
     const productosSnapshot = await getDocs(collection(db, 'productos'));
     const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    productosList.sort((a, b) => a.codigoInterno.localeCompare(b.codigoInterno));
     setProductos(productosList);
   };
 
@@ -27,7 +40,7 @@ const RegistrarProducto = () => {
 
   const agregarProducto = async () => {
     try {
-      const q = query(collection(db, 'productos'), where('proveedores', 'array-contains', codigoProveedor));
+      const q = query(collection(db, 'productos'), where('proveedores', 'array-contains', codigoProveedor.toUpperCase()));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
@@ -36,13 +49,13 @@ const RegistrarProducto = () => {
       }
 
       await addDoc(collection(db, 'productos'), {
-        codigoInterno,
-        categoria,
-        marca,
-        descripcion,
+        codigoInterno: codigoInterno.toUpperCase(),
+        categoria: categoria.toUpperCase(),
+        marca: marca.toUpperCase(),
+        descripcion: descripcion.toUpperCase(),
         stock: parseInt(stock, 10),
-        ubicacion,
-        proveedores: [codigoProveedor]
+        ubicacion: ubicacion.toUpperCase(),
+        proveedores: [codigoProveedor.toUpperCase()]
       });
 
       alert('Producto agregado exitosamente');
@@ -57,11 +70,11 @@ const RegistrarProducto = () => {
     try {
       const productoRef = doc(db, 'productos', idProducto);
       await updateDoc(productoRef, {
-        categoria,
-        marca,
-        descripcion,
+        categoria: categoria.toUpperCase(),
+        marca: marca.toUpperCase(),
+        descripcion: descripcion.toUpperCase(),
         stock: parseInt(stock, 10),
-        ubicacion
+        ubicacion: ubicacion.toUpperCase()
       });
 
       alert('Producto actualizado exitosamente');
@@ -72,9 +85,21 @@ const RegistrarProducto = () => {
     }
   };
 
+  const eliminarProducto = async () => {
+    try {
+      await deleteDoc(doc(db, 'productos', productoAEliminar));
+      alert('Producto eliminado exitosamente');
+      setProductoAEliminar(null);
+      setOpen(false);
+      obtenerProductos();
+    } catch (error) {
+      alert('Error al eliminar el producto: ' + error.message);
+    }
+  };
+
   const seleccionarProducto = (producto) => {
     setCodigoInterno(producto.codigoInterno);
-    setCodigoProveedor(producto.proveedores[0]);  // Suponiendo que solo hay un proveedor
+    setCodigoProveedor(producto.proveedores[0]);
     setCategoria(producto.categoria);
     setMarca(producto.marca);
     setDescripcion(producto.descripcion);
@@ -97,125 +122,213 @@ const RegistrarProducto = () => {
     setIdProducto('');
   };
 
+  const handleClickOpen = (id) => {
+    setProductoAEliminar(id);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const productosFiltrados = productos.filter(producto => {
+    const term = searchTerm.toLowerCase();
+    switch (searchBy) {
+      case 'codigoInterno':
+        return producto.codigoInterno.toLowerCase().includes(term);
+      case 'codigoProveedor':
+        return producto.proveedores.some(proveedor => proveedor.toLowerCase().includes(term));
+      case 'categoria':
+        return producto.categoria.toLowerCase().includes(term);
+      case 'descripcion':
+        return producto.descripcion.toLowerCase().includes(term);
+      case 'ubicacion':
+        return producto.ubicacion.toLowerCase().includes(term);
+      default:
+        return true;
+    }
+  });
+
   return (
-    <div className="registrar-producto-container">
-      <div className="form-container">
-        <h2>{editando ? 'Actualizar Producto' : 'Registrar Producto'}</h2>
-        <form onSubmit={(e) => { e.preventDefault(); editando ? actualizarProducto() : agregarProducto(); }}>
-          <div className="form-group">
-            <label>Código Interno</label>
-            <input
-              type="text"
+    <Container maxWidth="lg">
+      <Typography variant="h4" component="h1" gutterBottom>
+        Registrar Producto
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<HomeIcon />}
+        onClick={() => navigate('/home')}
+        style={{ marginBottom: '20px' }}
+      >
+        Menú Principal
+      </Button>
+      <Box display="flex" justifyContent="space-between">
+        <Box flexBasis="25%">
+          <form onSubmit={(e) => { e.preventDefault(); editando ? actualizarProducto() : agregarProducto(); }}>
+            <TextField
+              fullWidth
+              label="Código Interno"
               value={codigoInterno}
               onChange={(e) => setCodigoInterno(e.target.value)}
+              margin="normal"
               required
               disabled={editando}
+              multiline // Agrega esta línea para permitir múltiples líneas
             />
-          </div>
-          <div className="form-group">
-            <label>Código Proveedor</label>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              label="Código Proveedor"
               value={codigoProveedor}
               onChange={(e) => setCodigoProveedor(e.target.value)}
+              margin="normal"
               required
               disabled={editando}
+              multiline // Agrega esta línea para permitir múltiples líneas
             />
-          </div>
-          <div className="form-group">
-            <label>Categoría</label>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              label="Categoría"
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
+              margin="normal"
               required
+              multiline // Agrega esta línea para permitir múltiples líneas
             />
-          </div>
-          <div className="form-group">
-            <label>Marca</label>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              label="Marca"
               value={marca}
               onChange={(e) => setMarca(e.target.value)}
+              margin="normal"
               required
+              multiline // Agrega esta línea para permitir múltiples líneas
             />
-          </div>
-          <div className="form-group">
-            <label>Descripción</label>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              label="Descripción"
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
+              margin="normal"
               required
+              multiline // Agrega esta línea para permitir múltiples líneas
+              rows={3} // Puedes ajustar el número de líneas visibles por defecto
+              style={{ width: '100%' }} // Agrega esta línea para que ocupe todo el ancho disponible
             />
-          </div>
-          <div className="form-group">
-            <label>Stock</label>
-            <input
-              type="number"
+            <TextField
+              fullWidth
+              label="Stock"
               value={stock}
               onChange={(e) => setStock(e.target.value)}
+              margin="normal"
               required
+              type="number"
             />
-          </div>
-          <div className="form-group">
-            <label>Ubicación</label>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              label="Ubicación"
               value={ubicacion}
               onChange={(e) => setUbicacion(e.target.value)}
+              margin="normal"
               required
+              multiline // Agrega esta línea para permitir múltiples líneas
             />
-          </div>
-          {error && <p className="error">{error}</p>}
-          <div className="form-buttons">
-            <button type="submit" className="btn-agregar-producto">
-              {editando ? 'Actualizar Producto' : 'Agregar Producto'}
-            </button>
-            {editando && (
-              <button type="button" className="btn-cancelar" onClick={resetFormulario}>
-                Cancelar
-              </button>
-            )}
-          </div>
-        </form>
-        <button className="btn-regresar" onClick={() => window.location.href = '/home'}>Regresar</button>
-      </div>
-
-      <div className="tabla-container">
-        <h2>Lista de Productos</h2>
-        <table className="tabla-productos">
-          <thead>
-            <tr>
-              <th>Código Interno</th>
-              <th>Código Proveedor</th>
-              <th>Categoría</th>
-              <th>Marca</th>
-              <th>Descripción</th>
-              <th>Stock</th>
-              <th>Ubicación</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {productos.map((producto) => (
-              <tr key={producto.id}>
-                <td>{producto.codigoInterno}</td>
-                <td>{producto.proveedores ? producto.proveedores.join(', ') : ''}</td>
-                <td>{producto.categoria}</td>
-                <td>{producto.marca}</td>
-                <td>{producto.descripcion}</td>
-                <td>{producto.stock}</td>
-                <td>{producto.ubicacion}</td>
-                <td>
-                  <button onClick={() => seleccionarProducto(producto)}>Editar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+            {error && <Typography color="error">{error}</Typography>}
+            <Box display="flex" justifyContent="space-between" mt={2}>
+              <Button variant="contained" color="primary" type="submit">
+                {editando ? 'Actualizar Producto' : 'Agregar Producto'}
+              </Button>
+              {editando && (
+                <Button variant="contained" color="secondary" onClick={resetFormulario}>
+                  Cancelar
+                </Button>
+              )}
+            </Box>
+          </form>
+        </Box>
+        <Box flexBasis="50%">
+          <Typography variant="h5" component="h2" gutterBottom>
+            Lista de Productos
+          </Typography>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Buscar por</InputLabel>
+            <Select value={searchBy} onChange={(e) => setSearchBy(e.target.value)}>
+              <MenuItem value="codigoInterno">Código Interno</MenuItem>
+              <MenuItem value="codigoProveedor">Código Proveedor</MenuItem>
+              <MenuItem value="categoria">Categoría</MenuItem>
+              <MenuItem value="descripcion">Descripción</MenuItem>
+              <MenuItem value="ubicacion">Ubicación</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            label={`Buscar por ${searchBy}`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            margin="normal"
+          />
+          <TableContainer component={Paper} style={{ maxHeight: 400 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Código Interno</TableCell>
+                  <TableCell>Código Proveedor</TableCell>
+                  <TableCell>Categoría</TableCell>
+                  <TableCell>Marca</TableCell>
+                  <TableCell>Descripción</TableCell>
+                  <TableCell>Stock</TableCell>
+                  <TableCell>Ubicación</TableCell>
+                  <TableCell>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {productosFiltrados.length > 0 ? (
+                  productosFiltrados.map((producto) => (
+                    <TableRow key={producto.id}>
+                      <TableCell>{producto.codigoInterno}</TableCell>
+                      <TableCell>{producto.proveedores ? producto.proveedores.join(', ') : ''}</TableCell>
+                      <TableCell>{producto.categoria}</TableCell>
+                      <TableCell>{producto.marca}</TableCell>
+                      <TableCell>{producto.descripcion}</TableCell>
+                      <TableCell>{producto.stock}</TableCell>
+                      <TableCell>{producto.ubicacion}</TableCell>
+                      <TableCell>
+                        <IconButton onClick={() => seleccionarProducto(producto)} color="primary">
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton onClick={() => handleClickOpen(producto.id)} color="secondary">
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8}>No se encontraron productos</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Box>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Estás seguro de que deseas eliminar este producto?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={eliminarProducto} color="secondary">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 
