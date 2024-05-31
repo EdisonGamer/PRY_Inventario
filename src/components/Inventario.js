@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, getDocs } from '../firebase';
+import { db, collection, getDocs, query, orderBy } from '../firebase';
 import { 
-  Container, Typography, TextField, RadioGroup, FormControlLabel, Radio, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box 
+  Container, Typography, TextField,Box,Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button 
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate } from 'react-router-dom';
 
 const Inventario = () => {
   const [productos, setProductos] = useState([]);
+  const [compras, setCompras] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchBy, setSearchBy] = useState('codigoInterno'); // Estado para manejar la opción de búsqueda
   const navigate = useNavigate();
@@ -20,8 +21,26 @@ const Inventario = () => {
       productosList.sort((a, b) => a.codigoInterno.localeCompare(b.codigoInterno));
       setProductos(productosList);
     };
+
+    const obtenerCompras = async () => {
+      const comprasQuery = query(collection(db, 'compras'), orderBy('fecha', 'desc'));
+      const comprasSnapshot = await getDocs(comprasQuery);
+      const comprasList = comprasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCompras(comprasList);
+    };
+
     obtenerProductos();
+    obtenerCompras();
   }, []);
+
+  // Obtener el último precio de venta para un producto
+  const obtenerUltimoPrecioVenta = (codigoProveedor) => {
+    const comprasFiltradas = compras.filter(compra => compra.codigoProveedor === codigoProveedor);
+    if (comprasFiltradas.length > 0) {
+      return comprasFiltradas[0].precioVenta;
+    }
+    return 'No Registrado';
+  };
 
   // Filtrar productos por término de búsqueda según el campo seleccionado
   const productosFiltrados = productos.filter(producto => {
@@ -58,14 +77,44 @@ const Inventario = () => {
       >
         Menú Principal
       </Button>
-      <RadioGroup row value={searchBy} onChange={(e) => setSearchBy(e.target.value)} style={{ marginBottom: '20px' }}>
-        <FormControlLabel value="codigoInterno" control={<Radio />} label="Código Interno" />
-        <FormControlLabel value="codigoProveedor" control={<Radio />} label="Código Proveedor" />
-        <FormControlLabel value="categoria" control={<Radio />} label="Categoría" />
-        <FormControlLabel value="marca" control={<Radio />} label="Marca" />
-        <FormControlLabel value="descripcion" control={<Radio />} label="Descripción" />
-        <FormControlLabel value="ubicacion" control={<Radio />} label="Ubicación" />
-      </RadioGroup>
+      <Box display="flex"  justifyContent="" marginBottom="20px">
+        <Button 
+          variant={searchBy === 'codigoInterno' ? 'contained' : 'outlined'} 
+          onClick={() => setSearchBy('codigoInterno')}
+        >
+          CÓDIGO INTERNO
+        </Button>
+        <Button 
+          variant={searchBy === 'codigoProveedor' ? 'contained' : 'outlined'} 
+          onClick={() => setSearchBy('codigoProveedor')}
+        >
+          CÓDIGO PROVEEDOR
+        </Button>
+        <Button 
+          variant={searchBy === 'categoria' ? 'contained' : 'outlined'} 
+          onClick={() => setSearchBy('categoria')}
+        >
+          CATEGORÍA
+        </Button>
+        <Button 
+          variant={searchBy === 'marca' ? 'contained' : 'outlined'} 
+          onClick={() => setSearchBy('marca')}
+        >
+          MARCA
+        </Button>
+        <Button 
+          variant={searchBy === 'descripcion' ? 'contained' : 'outlined'} 
+          onClick={() => setSearchBy('descripcion')}
+        >
+          DESCRIPCIÓN
+        </Button>
+        <Button 
+          variant={searchBy === 'ubicacion' ? 'contained' : 'outlined'} 
+          onClick={() => setSearchBy('ubicacion')}
+        >
+          UBICACIÓN
+        </Button>
+      </Box>
       <TextField
         fullWidth
         label={`Ingrese ${searchBy}`}
@@ -97,7 +146,7 @@ const Inventario = () => {
                   <TableCell>{producto.marca}</TableCell>
                   <TableCell style={{ width: '30%' }}>{producto.descripcion}</TableCell>
                   <TableCell>{producto.stock}</TableCell>
-                  <TableCell>{producto.ultimoPrecioVenta || 'No Registrado'}</TableCell>
+                  <TableCell>{obtenerUltimoPrecioVenta(producto.proveedores[0])}</TableCell>
                   <TableCell>{producto.ubicacion}</TableCell>
                 </TableRow>
               ))

@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { db, collection, getDocs, addDoc, doc, updateDoc, increment } from '../firebase';
-import './RegistrarCompra.css';
+import { 
+  Container, TextField, Button, Typography, Box, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper 
+} from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import HomeIcon from '@mui/icons-material/Home';
 
 const RegistrarCompra = () => {
   const [productos, setProductos] = useState([]);
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [codigoProveedor, setCodigoProveedor] = useState('');
   const [cantidad, setCantidad] = useState('');
-  const [fecha, setFecha] = useState('');
+  const [fecha, setFecha] = useState(null);
   const [precioCompra, setPrecioCompra] = useState('');
   const [precioVenta, setPrecioVenta] = useState('');
   const [error, setError] = useState('');
@@ -18,6 +23,7 @@ const RegistrarCompra = () => {
   const obtenerProductos = async () => {
     const productosSnapshot = await getDocs(collection(db, 'productos'));
     const productosList = productosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    productosList.sort((a, b) => a.codigoInterno.localeCompare(b.codigoInterno));
     setProductos(productosList);
     setProductosFiltrados(productosList);
   };
@@ -36,7 +42,7 @@ const RegistrarCompra = () => {
       await addDoc(collection(db, 'compras'), {
         codigoProveedor: productoSeleccionado.proveedores[0],
         cantidad: parseInt(cantidad, 10),
-        fecha,
+        fecha: fecha.toISOString().split('T')[0],
         precioCompra: parseFloat(precioCompra),
         precioVenta: parseFloat(precioVenta),
       });
@@ -61,7 +67,7 @@ const RegistrarCompra = () => {
 
   const resetFormulario = () => {
     setCantidad('');
-    setFecha('');
+    setFecha(null);
     setPrecioCompra('');
     setPrecioVenta('');
     setProductoSeleccionado(null);
@@ -96,151 +102,160 @@ const RegistrarCompra = () => {
   };
 
   return (
-    <div className="registrar-compra-container">
-      <div className="form-container">
-        <h2>Registrar Compra</h2>
-        <form onSubmit={(e) => { e.preventDefault(); registrarCompra(); }}>
-          <div className="form-group">
-            <label>Código Proveedor</label>
-            <input
-              type="text"
+    <Container maxWidth="lg">
+      <Typography variant="h4" component="h1" gutterBottom>
+        Registrar Compra
+      </Typography>
+      <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<HomeIcon />} 
+            onClick={() => window.location.href = '/home'}
+            style={{ marginBottom: '20px' }}
+          >
+            MENÚ PRINCIPAL
+      </Button>
+      <Box display="flex" justifyContent="space-between">
+        <Box flexBasis="25%">
+          <form onSubmit={(e) => { e.preventDefault(); registrarCompra(); }}>
+            <TextField
+              fullWidth
+              label="Código Proveedor"
               value={codigoProveedor}
               readOnly
+              margin="normal"
+              required
+              disabled
             />
-          </div>
-          <div className="form-group">
-            <label>Cantidad</label>
-            <input
-              type="number"
+            <TextField
+              fullWidth
+              label="Cantidad"
               value={cantidad}
               onChange={(e) => setCantidad(e.target.value)}
+              margin="normal"
               required
+              type="number"
             />
-          </div>
-          <div className="form-group">
-            <label>Fecha</label>
-            <input
-              type="date"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Precio de Compra</label>
-            <input
-              type="text"
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Fecha"
+                value={fecha}
+                onChange={(newValue) => setFecha(newValue)}
+                renderInput={(params) => <TextField {...params} fullWidth margin="normal" required />}
+              />
+            </LocalizationProvider>
+            <TextField
+              fullWidth
+              label="Precio de Compra"
               value={precioCompra}
               onChange={(e) => setPrecioCompra(e.target.value)}
+              margin="normal"
               required
+              type="number"
             />
-          </div>
-          <div className="form-group">
-            <label>Precio de Venta</label>
-            <input
-              type="text"
+            <TextField
+              fullWidth
+              label="Precio de Venta"
               value={precioVenta}
               onChange={(e) => setPrecioVenta(e.target.value)}
+              margin="normal"
               required
+              type="number"
             />
-          </div>
-          {error && <p className="error">{error}</p>}
-          <div className="form-buttons">
-            <button type="submit" className="btn-registrar-compra">Registrar Compra</button>
-            {productoSeleccionado && (
-              <button type="button" className="btn-cancelar" onClick={resetFormulario}>Cancelar</button>
-            )}
-          </div>
-        </form>
-        <button className="btn-regresar" onClick={() => window.location.href = '/home'}>Regresar</button>
-      </div>
-
-      <div className="tabla-container">
-        <h2>Buscar por</h2>
-        <div className="busqueda">
-          <label>
-            <input
-              type="radio"
-              value="codigoInterno"
-              checked={criterioBusqueda === 'codigoInterno'}
-              onChange={(e) => setCriterioBusqueda(e.target.value)}
+            {error && <Typography color="error">{error}</Typography>}
+            <Box display="flex" justifyContent="space-between" mt={2}>
+              <Button variant="contained" color="primary" type="submit">
+                Registrar Compra
+              </Button>
+              {productoSeleccionado && (
+                <Button variant="contained" color="secondary" onClick={resetFormulario}>
+                  Cancelar
+                </Button>
+              )}
+            </Box>
+          </form>
+        </Box>
+        <Box flexBasis="70%">
+          <Typography variant="h5" component="h2" gutterBottom>
+            Lista de Productos
+          </Typography>
+          <Box mb={2}>
+            <Grid container spacing={2}>
+              <Grid item>
+                <Button variant={criterioBusqueda === 'codigoInterno' ? 'contained' : 'outlined'} onClick={() => setCriterioBusqueda('codigoInterno')}>
+                  Código Interno
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button variant={criterioBusqueda === 'codigoProveedor' ? 'contained' : 'outlined'} onClick={() => setCriterioBusqueda('codigoProveedor')}>
+                  Código Proveedor
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button variant={criterioBusqueda === 'categoria' ? 'contained' : 'outlined'} onClick={() => setCriterioBusqueda('categoria')}>
+                  Categoría
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button variant={criterioBusqueda === 'marca' ? 'contained' : 'outlined'} onClick={() => setCriterioBusqueda('marca')}>
+                  Marca
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button variant={criterioBusqueda === 'descripcion' ? 'contained' : 'outlined'} onClick={() => setCriterioBusqueda('descripcion')}>
+                  Descripción
+                </Button>
+              </Grid>
+            </Grid>
+            <TextField
+              fullWidth
+              label={`Buscar por ${criterioBusqueda}`}
+              value={filtro}
+              onChange={buscarProducto}
+              margin="normal"
             />
-            Código Interno
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="codigoProveedor"
-              checked={criterioBusqueda === 'codigoProveedor'}
-              onChange={(e) => setCriterioBusqueda(e.target.value)}
-            />
-            Código Proveedor
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="categoria"
-              checked={criterioBusqueda === 'categoria'}
-              onChange={(e) => setCriterioBusqueda(e.target.value)}
-            />
-            Categoría
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="marca"
-              checked={criterioBusqueda === 'marca'}
-              onChange={(e) => setCriterioBusqueda(e.target.value)}
-            />
-            Marca
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="descripcion"
-              checked={criterioBusqueda === 'descripcion'}
-              onChange={(e) => setCriterioBusqueda(e.target.value)}
-            />
-            Descripción
-          </label>
-        </div>
-        <input
-          type="text"
-          placeholder={`Ingrese ${criterioBusqueda}`}
-          onChange={buscarProducto}
-          value={filtro}
-        />
-        <h2>Lista de Productos</h2>
-        <table className="tabla-productos">
-          <thead>
-            <tr>
-              <th>Código Interno</th>
-              <th>Código Proveedor</th>
-              <th>Categoría</th>
-              <th>Marca</th>
-              <th>Descripción</th>
-              <th>Stock</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {productosFiltrados.map((producto) => (
-              <tr key={producto.id}>
-                <td>{producto.codigoInterno}</td>
-                <td>{producto.proveedores ? producto.proveedores.join(', ') : ''}</td>
-                <td>{producto.categoria}</td>
-                <td>{producto.marca}</td>
-                <td>{producto.descripcion}</td>
-                <td>{producto.stock}</td>
-                <td>
-                  <button className="btn-seleccionar" onClick={() => seleccionarProducto(producto)}>Seleccionar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </Box>
+          <TableContainer component={Paper} style={{ maxHeight: 400 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Código Interno</TableCell>
+                  <TableCell>Código Proveedor</TableCell>
+                  <TableCell>Categoría</TableCell>
+                  <TableCell>Marca</TableCell>
+                  <TableCell>Descripción</TableCell>
+                  <TableCell>Stock</TableCell>
+                  <TableCell>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {productosFiltrados.length > 0 ? (
+                  productosFiltrados.map((producto) => (
+                    <TableRow key={producto.id}>
+                      <TableCell>{producto.codigoInterno}</TableCell>
+                      <TableCell>{producto.proveedores ? producto.proveedores.join(', ') : ''}</TableCell>
+                      <TableCell>{producto.categoria}</TableCell>
+                      <TableCell>{producto.marca}</TableCell>
+                      <TableCell>{producto.descripcion}</TableCell>
+                      <TableCell>{producto.stock}</TableCell>
+                      <TableCell>
+                        <Button variant="contained" color="primary" onClick={() => seleccionarProducto(producto)}>
+                          Seleccionar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7}>No se encontraron productos</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 

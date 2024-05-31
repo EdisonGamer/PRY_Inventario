@@ -266,7 +266,7 @@ const RegistrarProducto = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             margin="normal"
-          />
+          />        
           <TableContainer component={Paper} style={{ maxHeight: 400 }}>
             <Table stickyHeader>
               <TableHead>
